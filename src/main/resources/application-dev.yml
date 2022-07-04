@@ -1,0 +1,48 @@
+server:
+  port: 8090
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: false
+      force: true
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    name: stocker
+    url: jdbc:mysql://localhost:3306/stocker?useUnicode=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: stocker
+    password: 1234Qwer
+  devtools:
+    restart:
+      enabled: true
+#  cache:
+#    redis:
+#      time-to-live: 300000 #缓存超时时间ms
+#      cache-null-values: false #是否缓存空值
+#  redis:
+#    host: localhost
+#    database: 2
+#    port: 6379
+#    password:
+#    timeout: 10000
+#    jedis:
+#      pool:
+#        min-idle: 0
+#        max-active: 10
+#        max-idle: 10
+#        max-wait: 200
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+file-upload:
+  location: C:\\work\\idea\\stocker\\UploadFiles\\
+
+jwt:
+  expiration: 3153600000
+  

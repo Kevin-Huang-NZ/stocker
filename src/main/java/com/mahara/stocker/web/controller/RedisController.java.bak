@@ -1,0 +1,56 @@
+package com.mahara.stocker.web.controller;
+
+import com.mahara.stocker.GlobalConst;
+import com.mahara.stocker.core.dao.UserRepository;
+import com.mahara.stocker.core.model.User;
+import com.mahara.stocker.error.PredefinedError;
+import com.mahara.stocker.util.RedisUtil;
+import com.mahara.stocker.web.response.Root;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.constraints.Min;
+
+@RestController
+@RequestMapping("/api/redis")
+public class RedisController {
+  @Autowired private UserRepository userRepository;
+  @Autowired private RedisUtil redisUtil;
+
+  @Operation(
+      summary = "使用ID获取User对象",
+      description = "从缓存中获取User对象，缓存未命中，查询数据库。如果从数据库中查询到User，缓存到redis。")
+  @SecurityRequirement(name = GlobalConst.SECURITY_SCHEMES_KEY)
+  @GetMapping("/get-user/{id}")
+  public Root getUser(
+      @Parameter(name = "id", description = "用户的ID") @PathVariable @Min(0l) Long id) {
+
+    User cachedUser = redisUtil.get(String.valueOf(id), User.class);
+    if (cachedUser == null) {
+      var bean = userRepository.findById(id);
+      if (bean.isPresent()) {
+        redisUtil.set(String.valueOf(id), bean.get());
+        return Root.create(bean.get());
+      } else {
+        return Root.create(PredefinedError.DATA_NOT_EXIST);
+      }
+    } else {
+      return Root.create(cachedUser);
+    }
+  }
+
+  @Operation(summary = "使用ID清除缓存的User对象")
+  @SecurityRequirement(name = GlobalConst.SECURITY_SCHEMES_KEY)
+  @GetMapping("/remove-cached-user/{id}")
+  public Root removeCachedUser(
+      @Parameter(name = "id", description = "用户的ID") @PathVariable @Min(0l) Long id) {
+    redisUtil.del(String.valueOf(id));
+    return Root.create();
+  }
+}
